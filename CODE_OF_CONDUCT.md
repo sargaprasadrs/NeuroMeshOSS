@@ -32,4 +32,4 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Reporting & Contact
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at `conduct@neuromesh.local`. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at `sargaprasad@duck.com`. All complaints will be reviewed and investigated promptly and fairly.
