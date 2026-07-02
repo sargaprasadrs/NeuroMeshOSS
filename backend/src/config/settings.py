@@ -1,6 +1,6 @@
 import os
 from typing import Literal
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -54,6 +54,31 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
     OPENAI_API_BASE: str | None = None
     ANTHROPIC_API_KEY: str | None = None
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        if not v.startswith("postgresql"):
+            raise ValueError("DATABASE_URL must be a PostgreSQL connection string starting with postgresql")
+        return v
+
+    @field_validator("REDIS_URL")
+    @classmethod
+    def validate_redis_url(cls, v: str) -> str:
+        if not v.startswith("redis"):
+            raise ValueError("REDIS_URL must start with 'redis://' or 'rediss://'")
+        return v
+
+    @field_validator("JWT_SECRET_KEY")
+    @classmethod
+    def validate_jwt_secret(cls, v: str) -> str:
+        if len(v) < 32:
+            import warnings
+            warnings.warn(
+                "JWT_SECRET_KEY is less than 32 characters. This is unsafe for production environments.",
+                UserWarning,
+            )
+        return v
 
 
 # Global settings singleton

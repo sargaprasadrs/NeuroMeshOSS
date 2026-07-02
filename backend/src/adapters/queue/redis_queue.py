@@ -9,7 +9,14 @@ logger = logging.getLogger(__name__)
 
 class RedisJobQueue(IJobQueue):
     def __init__(self, redis_url: str) -> None:
-        self.client = aioredis.from_url(redis_url, decode_responses=True)
+        self.client = aioredis.from_url(
+            redis_url,
+            decode_responses=True,
+            socket_timeout=5.0,
+            socket_connect_timeout=5.0,
+            socket_keepalive=True,
+            retry_on_timeout=True,
+        )
 
     async def enqueue(self, queue_name: str, payload: Dict[str, Any]) -> str:
         # Serializing payload data
@@ -64,7 +71,14 @@ class RedisJobQueue(IJobQueue):
 
 class RedisEventBus(IEventBus):
     def __init__(self, redis_url: str) -> None:
-        self.client = aioredis.from_url(redis_url, decode_responses=True)
+        self.client = aioredis.from_url(
+            redis_url,
+            decode_responses=True,
+            socket_timeout=5.0,
+            socket_connect_timeout=5.0,
+            socket_keepalive=True,
+            retry_on_timeout=True,
+        )
 
     async def publish(self, topic: str, event_type: str, payload: Dict[str, Any]) -> None:
         data = {

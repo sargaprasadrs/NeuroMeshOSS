@@ -499,3 +499,26 @@ This architecture achieves the optimal balance between **operational simplicity*
 - **It is highly cohesive yet loosely coupled:** Hexagonal architecture isolates core business rules from infrastructure choices (e.g., we can swap Qdrant for pgvector, or Redis Streams for RabbitMQ simply by changing config adapters).
 - **Fast developer onboarding:** A developer can launch the entire stack using `docker compose up` in less than 60 seconds with no cloud credentials required.
 - **No Vendor Lock-in:** The system uses standard, open-source building blocks (Ollama, PostgreSQL, Redis, Qdrant, OpenTelemetry) ensuring it can run on-premise, on a local machine, or inside any cloud Kubernetes engine without code modifications.
+
+---
+
+## 17. Telemetry & Metrics Collection
+NeuroMeshOSS leverages a dual-tier telemetry collection framework:
+1. **Push-Based Tracing (OpenTelemetry)**: API requests, worker state transitions, and downstream model invocation requests export span batches directly to an OTel Collector agent. This links web UI triggers directly to execution logs via `X-Correlation-ID` tracing scopes.
+2. **Pull-Based Metrics (Prometheus)**: System-level and task performance metrics (e.g. queue backlogs, database connections, and run durations) are scraped from the `/metrics` endpoint on the API plane, adhering to Prometheus exposition conventions (version 0.0.4 text).
+
+## 18. Testing Isolation & Mock Infrastructure
+To ensure CI pipeline builds run without requiring local database or messaging server dependencies:
+- **Unit and Integration Isolation**: The test suite (`backend/tests/`) replaces concrete SQLAlchemy sessions and Redis streams connections with asynchronous mocks (`unittest.mock.AsyncMock`) using pytest fixture dependencies.
+- **Dependency Overrides**: The FastAPI application factory supports runtime DI overrides (e.g., replacing `get_db_session` context generators with mocked transaction interfaces), enabling clean REST testing.
+
+## 19. Connection Pool Lifespans & State Singletons
+Creating connections to message queues or databases on a per-request basis exhausts network sockets under high throughput:
+- **State Reuse**: The API factory binds a single, global `RedisJobQueue` and `RedisEventBus` instance to the FastAPI application state `app.state` during the lifespan startup phase.
+- **Draining and Disposal**: During application termination (shutdown SIGTERM / SIGINT), connection pools execute async `close()` cleanups, ensuring clean resource teardown without connection drops.
+
+## 20. Database Seeding & Mock Workflows
+To support development onboarding and local verification, a bootstrap seeder script (`backend/scripts/seed.py`) populates the following structures:
+- **Default Identity**: Registers a seed administrator (`admin@neuromesh.local`) with bcrypt-hashed credentials.
+- **Market Analyzer Flow**: Seeds a sample Directed Acyclic Graph (DAG) with nodes matching LLM researcher agents, web search execution tools, and editor approval nodes.
+

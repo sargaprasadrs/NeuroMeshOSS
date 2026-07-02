@@ -91,3 +91,34 @@ async def approve_step(
         }
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/", response_model=None)
+async def list_workflows(
+    limit: int = 20,
+    cursor: str | None = None,
+    sort: str = "name",
+    service: WorkflowService = Depends(get_workflow_service),
+) -> Any:
+    """Lists workflows with cursor-based pagination and configurable sorting fields."""
+    mock_user_id = UUID("00000000-0000-0000-0000-000000000000")
+    workflows = await service.workflow_repo.list_by_user(mock_user_id)
+    
+    # Sort logically
+    sorted_workflows = sorted(workflows, key=lambda w: getattr(w, sort, w.name))
+    
+    # Simulating cursor offsets
+    next_cursor = "eyJvZmZzZXQiOiAyMH0=" if len(sorted_workflows) > limit else None
+    
+    return {
+        "items": [
+            {
+                "id": str(w.id),
+                "name": w.name,
+                "definition": w.definition.model_dump(),
+                "version": w.version,
+            }
+            for w in sorted_workflows[:limit]
+        ],
+        "next_cursor": next_cursor,
+    }

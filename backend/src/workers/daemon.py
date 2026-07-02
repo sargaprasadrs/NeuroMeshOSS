@@ -38,13 +38,38 @@ async def main() -> None:
     # Instantiate Redis streams queue port
     job_queue = RedisJobQueue(settings.REDIS_URL)
 
-    # Listen loop
-    await job_queue.listen(
-        queue_name=args.queue,
-        group_name=args.group,
-        consumer_name=args.name,
-        handler=handle_workflow_job,
-    )
+    # Graceful shutdown handler registration
+    import sys
+    import signal
+    loop = asyncio.get_running_loop()
+    main_task = asyncio.current_task()
+
+    def handle_exit() -> None:
+        logger.info("Received termination signal. Triggering graceful shutdown...")
+        if main_task:
+            main_task.cancel()
+
+    if sys.platform != "win32":
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            try:
+                loop.add_signal_handler(sig, handle_exit)
+            except ValueError:
+                pass  # Fallback if loop does not support signal handling
+
+    try:
+        # Listen loop
+        await job_queue.listen(
+            queue_name=args.queue,
+            group_name=args.group,
+            consumer_name=args.name,
+            handler=handle_workflow_job,
+        )
+    except asyncio.CancelledError:
+        logger.info("Worker daemon execution task was cancelled.")
+    finally:
+        logger.info("Closing Worker Queue connection pool...")
+        await job_queue.close()
+        logger.info("Worker Queue connection pool closed.")
 
 
 if __name__ == "__main__":

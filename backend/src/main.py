@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from src.config.settings import settings
 from src.api.middleware import (
@@ -92,6 +92,14 @@ def create_app() -> FastAPI:
     async def readiness() -> dict:
         # Check basic pool connectivity
         return {"status": "ready", "database": "up", "queue": "up"}
+
+    @app.get("/metrics", tags=["Metrics"])
+    async def metrics_endpoint() -> Response:
+        from src.adapters.telemetry.metrics import TelemetryMetrics
+        return Response(
+            content=TelemetryMetrics.generate_prometheus_payload(),
+            media_type="text/plain; version=0.0.4; charset=utf-8",
+        )
 
     # Mount v1 REST & WebSocket Routers
     app.include_router(auth_router, prefix="/api/v1")
