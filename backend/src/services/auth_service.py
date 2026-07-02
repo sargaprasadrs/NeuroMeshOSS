@@ -1,6 +1,24 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 import jwt
+import bcrypt
+# Workaround for passlib's bcrypt check error with newer version modules
+if not hasattr(bcrypt, "__about__"):
+    class About:
+        __version__ = getattr(bcrypt, "__version__", "4.0.0")
+    bcrypt.__about__ = About()
+
+import passlib.handlers.bcrypt
+passlib.handlers.bcrypt.detect_wrap_bug = lambda *args, **kwargs: False
+
+# Truncate passwords longer than 72 bytes to bypass bcrypt v4.1+ ValueError crashes
+orig_hashpw = bcrypt.hashpw
+def patched_hashpw(password, salt):
+    if len(password) > 72:
+        password = password[:72]
+    return orig_hashpw(password, salt)
+bcrypt.hashpw = patched_hashpw
+
 from passlib.context import CryptContext
 from src.config.settings import settings
 

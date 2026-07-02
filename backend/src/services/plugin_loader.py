@@ -60,6 +60,17 @@ class PluginLoader:
                     and attr is not IPlugin
                 ):
                     plugin_instance: IPlugin = attr()
+                    
+                    # Verify third-party dependencies listed by the plugin
+                    plugin_deps = getattr(plugin_instance, "dependencies", [])
+                    missing_deps = [dep for dep in plugin_deps if importlib.util.find_spec(dep) is None]
+                    if missing_deps:
+                        logger.error(
+                            f"Failed to load plugin '{plugin_instance.name}': "
+                            f"Missing required dependencies: {missing_deps}"
+                        )
+                        continue
+
                     if self.check_compatibility(plugin_instance.version):
                         self.registry.register(plugin_instance)
                     else:

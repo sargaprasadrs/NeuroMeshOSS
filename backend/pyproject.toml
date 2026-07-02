@@ -3,12 +3,12 @@ name = "neuromesh-backend"
 version = "0.1.0"
 description = "NeuroMeshOSS Backend Control Plane API & Worker Engine"
 authors = ["NeuroMesh Maintainers <maintainers@neuromesh.local>"]
-readme = "README.md"
-packages = [{include = "src"}]
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 fastapi = "^0.111.0"
+setuptools = "^70.0.0"
 uvicorn = {extras = ["standard"], version = "^0.30.1"}
 pydantic = {extras = ["email"], version = "^2.7.4"}
 pydantic-settings = "^2.3.3"
@@ -54,3 +54,6 @@ python_version = "3.12"
 strict = true
 ignore_missing_imports = true
 exclude = ["alembic"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Play, ShieldAlert, Cpu, Layers, Activity, Plus } from "lucide-react";
+import Link from "next/link";
+import { Play, ShieldAlert, Cpu, Layers, Activity, Plus, Sparkles, KeyRound } from "lucide-react";
 
 export default function Dashboard() {
   const [logs, setLogs] = useState<string[]>([
@@ -28,9 +29,18 @@ export default function Dashboard() {
     <div className="flex flex-col min-h-screen">
       {/* Top Navbar */}
       <header className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50 backdrop-blur px-6 py-4">
-        <div className="flex items-center gap-2">
-          <Layers className="h-6 w-6 text-emerald-500" />
-          <span className="font-bold text-lg tracking-wider text-zinc-100">NeuroMeshOSS</span>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Layers className="h-6 w-6 text-emerald-500" />
+            <span className="font-bold text-lg tracking-wider text-zinc-100">NeuroMeshOSS</span>
+          </div>
+          <nav className="hidden md:flex items-center gap-4 text-sm text-zinc-400 font-medium">
+            <Link href="/workflows" className="hover:text-zinc-200 transition">Workflows</Link>
+            <Link href="/agents" className="hover:text-zinc-200 transition">Agents</Link>
+            <Link href="/plugins" className="hover:text-zinc-200 transition">Plugins</Link>
+            <Link href="/secrets" className="hover:text-zinc-200 transition">Secrets</Link>
+            <Link href="/metrics" className="hover:text-zinc-200 transition">Metrics</Link>
+          </nav>
         </div>
         <div className="flex items-center gap-4">
           <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
@@ -41,37 +51,37 @@ export default function Dashboard() {
       {/* Grid Stats Header */}
       <main className="flex-1 p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between">
+          <Link href="/agents" className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between hover:border-zinc-700 transition">
             <div>
               <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Active Agents</p>
-              <h3 className="text-2xl font-bold mt-1">12</h3>
+              <h3 className="text-2xl font-bold mt-1 text-zinc-200">12</h3>
             </div>
             <Cpu className="h-8 w-8 text-emerald-500 opacity-80" />
-          </div>
+          </Link>
 
-          <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between">
+          <Link href="/workflows" className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between hover:border-zinc-700 transition">
             <div>
               <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Running Flows</p>
-              <h3 className="text-2xl font-bold mt-1">3</h3>
+              <h3 className="text-2xl font-bold mt-1 text-zinc-200">3</h3>
             </div>
             <Activity className="h-8 w-8 text-blue-500 opacity-80" />
-          </div>
+          </Link>
 
-          <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between">
+          <Link href="/metrics" className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between hover:border-zinc-700 transition">
             <div>
               <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Queue Latency</p>
-              <h3 className="text-2xl font-bold mt-1">2ms</h3>
+              <h3 className="text-2xl font-bold mt-1 text-zinc-200">2ms</h3>
             </div>
             <Activity className="h-8 w-8 text-purple-500 opacity-80" />
-          </div>
+          </Link>
 
-          <div className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between">
+          <Link href="/secrets" className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between hover:border-zinc-700 transition">
             <div>
-              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">API Keys Registered</p>
-              <h3 className="text-2xl font-bold mt-1">4</h3>
+              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Secrets Vault</p>
+              <h3 className="text-2xl font-bold mt-1 text-zinc-200">4</h3>
             </div>
             <ShieldAlert className="h-8 w-8 text-amber-500 opacity-80" />
-          </div>
+          </Link>
         </section>
 
         {/* Dashboard Workspaces Split */}

@@ -3,7 +3,6 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastapi import FastAPI
-from httpx import AsyncClient
 from src.main import create_app
 from src.adapters.database.session import get_db_session
 from src.core.ports.queue import IJobQueue, IEventBus
@@ -22,6 +21,7 @@ def mock_db_session() -> AsyncMock:
     """Fixture providing a mocked SQLAlchemy AsyncSession."""
     session = AsyncMock()
     # Mocking standard SQLAlchemy methods
+    session.get = AsyncMock(return_value=None)
     session.add = MagicMock()
     session.flush = AsyncMock()
     session.commit = AsyncMock()
@@ -68,8 +68,11 @@ def test_app(mock_db_session: AsyncMock, mock_job_queue: AsyncMock, mock_event_b
     return app
 
 
+from httpx import AsyncClient, ASGITransport
+
+
 @pytest.fixture
 async def async_client(test_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """HTTP Client fixture for making asynchronous requests against test_app."""
-    async with AsyncClient(app=test_app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as client:
         yield client

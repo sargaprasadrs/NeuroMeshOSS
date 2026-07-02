@@ -11,10 +11,10 @@ def test_settings_import():
 
 def test_user_entity_validation():
     user = User(
-        email="test@neuromesh.local",
+        email="test@neuromesh.org",
         password_hash="hashed_string",
     )
-    assert user.email == "test@neuromesh.local"
+    assert user.email == "test@neuromesh.org"
     assert user.role == "user"
 
 

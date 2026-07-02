@@ -11,7 +11,7 @@ logger = logging.getLogger("seed")
 
 # Default User and Workflow definitions
 DEFAULT_USER_ID = UUID("00000000-0000-0000-0000-000000000000")
-DEFAULT_USER_EMAIL = "admin@neuromesh.local"
+DEFAULT_USER_EMAIL = "admin@neuromesh.com"
 DEFAULT_USER_PASSWORD = "admin_secure_password_123"
 
 SAMPLE_WORKFLOW_ID = UUID("11111111-1111-1111-1111-111111111111")

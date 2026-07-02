@@ -17,7 +17,7 @@ async def test_user_repository_save(mock_db_session: AsyncMock):
     repo = SqlAlchemyUserRepository(mock_db_session)
     user = User(
         id=uuid4(),
-        email="test@neuromesh.local",
+        email="test@neuromesh.org",
         password_hash="hashed_bytes_string",
     )
     

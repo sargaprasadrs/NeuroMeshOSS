@@ -3,11 +3,10 @@ name = "neuromesh-sdk"
 version = "0.1.0"
 description = "Python SDK client for NeuroMeshOSS agent workflows"
 authors = ["NeuroMesh Maintainers <maintainers@neuromesh.local>"]
-readme = "README.md"
-packages = [{include = "src"}]
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 httpx = "^0.27.0"
 websockets = "^12.0"
 pydantic = "^2.7.4"
