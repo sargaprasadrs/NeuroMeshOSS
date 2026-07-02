@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "neuromesh-cli"
+version = "0.1.0"
+description = "NeuroMeshOSS CLI client utility"
+authors = ["NeuroMesh Maintainers <maintainers@neuromesh.local>"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+typer = {extras = ["standard"], version = "^0.12.3"}
+rich = "^13.7.1"
+httpx = "^0.27.0"
+pydantic = "^2.7.4"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4.10"
+mypy = "^1.10.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+neuromesh = "src.main:app"
