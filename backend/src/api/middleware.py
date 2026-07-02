@@ -34,14 +34,16 @@ class JwtAuthenticationMiddleware(BaseHTTPMiddleware):
         request.state.user = None
         
         if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
-            try:
-                payload = AuthService.decode_access_token(token)
-                request.state.user = payload
-            except PyJWTError:
-                # Malformed or expired token: set user to None
-                # Endpoints that require authentication will fail at the dependency injection level
-                pass
+            parts = auth_header.split(" ")
+            if len(parts) > 1:
+                token = parts[1]
+                try:
+                    payload = AuthService.decode_access_token(token)
+                    request.state.user = payload
+                except PyJWTError:
+                    # Malformed or expired token: set user to None
+                    # Endpoints that require authentication will fail at the dependency injection level
+                    pass
         
         return await call_next(request)
 
