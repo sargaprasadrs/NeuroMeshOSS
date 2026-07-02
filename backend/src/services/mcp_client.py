@@ -1,17 +1,39 @@
 import asyncio
+import ipaddress
 import json
 import logging
+import socket
 import subprocess
 import sys
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
+
+
+def validate_url_ssrf(url: str) -> None:
+    """Verifies that the target host resolves to a public IP address, blocking SSRF."""
+    parsed = urlparse(url)
+    if not parsed.hostname:
+        raise ValueError("Invalid URL: missing hostname")
+        
+    try:
+        # Resolve hostname to IP
+        ip_addresses = socket.getaddrinfo(parsed.hostname, parsed.port or 80)
+        for family, _, _, _, sockaddr in ip_addresses:
+            ip = ipaddress.ip_address(sockaddr[0])
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast:
+                raise ValueError(f"SSRF Attempt: Access to private/local address {ip} is blocked.")
+    except socket.gaierror:
+        raise ValueError(f"Failed to resolve host '{parsed.hostname}'")
 
 
 class McpServerConnection:
     """Manages stdio-based subprocess lifecycle for a single MCP server connection."""
 
     def __init__(self, name: str, command: str, args: List[str], retry_limit: int = 3) -> None:
+        if ".." in command:
+            raise ValueError("Command contains directory traversal operators (..)")
         self.name = name
         self.command = command
         self.args = args

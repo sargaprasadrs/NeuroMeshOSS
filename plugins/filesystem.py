@@ -27,6 +27,13 @@ class FilesystemPlugin(IPlugin):
         print("[FilesystemPlugin] Scopes closed.")
 
     async def read_file(self, filepath: str) -> str:
-        """Reads content from a whitelisted directory path."""
-        print(f"[FilesystemPlugin] Reading file: {filepath}")
+        """Reads content from a whitelisted directory path, preventing traversal out of sandbox."""
+        base_dir = os.path.abspath(os.getcwd())
+        target_path = os.path.abspath(filepath)
+        
+        # Prevent directory traversal attacks
+        if os.path.commonpath([base_dir]) != os.path.commonpath([base_dir, target_path]):
+            raise PermissionError("Directory traversal attempt detected. Access denied.")
+            
+        print(f"[FilesystemPlugin] Reading file safely inside sandbox: {target_path}")
         return "mocked content"

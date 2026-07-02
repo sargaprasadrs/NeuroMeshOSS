@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import { Play, ShieldAlert, Cpu, Layers, Activity, Plus, Sparkles, KeyRound } from "lucide-react";
+import { LogConsole } from "@/components/LogConsole";
 
 export default function Dashboard() {
   const [logs, setLogs] = useState<string[]>([
@@ -16,14 +17,14 @@ export default function Dashboard() {
     { id: "wf-3", name: "Automated Code Review Agent", status: "active" },
   ]);
 
-  const triggerMockRun = () => {
+  const triggerMockRun = useCallback(() => {
     setLogs((prev) => [
       ...prev,
       `[trigger] Manual run request initiated for Market Analyzer Agent Flow`,
       `[engine] Created run execution context ID: run_${Math.floor(Math.random() * 100000)}`,
       `[queue] Pushed execution token to Redis Stream.`,
     ]);
-  };
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -103,7 +104,8 @@ export default function Dashboard() {
                   <span className="text-sm font-medium text-zinc-300">{wf.name}</span>
                   <button
                     onClick={triggerMockRun}
-                    className="p-1 bg-zinc-800 hover:bg-emerald-600 rounded text-zinc-400 group-hover:text-white transition"
+                    aria-label={`Trigger manual run for workflow ${wf.name}`}
+                    className="p-1 bg-zinc-800 hover:bg-emerald-600 rounded text-zinc-400 group-hover:text-white transition focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   >
                     <Play className="h-3 w-3" />
                   </button>
@@ -125,16 +127,7 @@ export default function Dashboard() {
           </section>
 
           {/* Right trace log console */}
-          <section className="lg:col-span-3 bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col gap-3 font-mono text-xs">
-            <h4 className="font-semibold font-sans text-zinc-300">Real-Time Trace Stream</h4>
-            <div className="flex-1 bg-black/60 rounded-lg p-3 overflow-y-auto max-h-[400px] flex flex-col gap-2 text-emerald-400 border border-zinc-900">
-              {logs.map((log, index) => (
-                <div key={index} className="leading-relaxed">
-                  {log}
-                </div>
-              ))}
-            </div>
-          </section>
+          <LogConsole logs={logs} />
         </div>
       </main>
     </div>

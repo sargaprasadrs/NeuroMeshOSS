@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 from typing import Any, Dict
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -52,6 +52,9 @@ class RunModel(Base):
 
 class RunStepModel(Base):
     __tablename__ = "run_steps"
+    __table_args__ = (
+        Index("idx_run_steps_run_created", "run_id", "created_at"),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     run_id: Mapped[UUID] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True)

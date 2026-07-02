@@ -468,7 +468,10 @@ We selected **Qdrant** as our dedicated vector engine.
 - **Agent Sandbox Execution:** Tools and native custom-code scripts can execute malicious payloads. To prevent this, tool executors execute in:
   1. *Local:* Isolated gRPC micro-containers or localized subprocess structures using limited execution permissions.
   2. *Production:* MicroVM sandboxes (e.g., AWS Firecracker or gVisor container runtimes).
-- **Model Context Protocol (MCP) isolation:** Every MCP server is initialized as an isolated subprocess with strict environment isolation, preventing directory traversal attacks.
+- **Model Context Protocol (MCP) isolation:** Every MCP server is initialized as an isolated subprocess with strict environment isolation. Standard stdio commands are checked to block directory traversal operators (`..`).
+- **Path Traversal Shielding:** Filesystem tool providers resolve absolute paths and block relative parent-directory navigation escapes using `os.path.commonpath` constraints.
+- **SSRF Loopback Filtering:** MCP server SSE connections check resolved target host IPs against private subnets (RFC 1918, RFC 5735) and reject local intranet attempts.
+- **User Validation Policies:** Registration endpoints require a minimum password length of 8 characters and encrypt entries using bcrypt.
 - **Encryption-at-Rest:** System configurations, LLM API keys, and workflow secrets are encrypted in PostgreSQL using Fernet-based AES-256 tokens. Encryption keys are sourced strictly from OS Environment variables (loaded via Docker/K8s Secrets).
 
 ---
@@ -519,6 +522,6 @@ Creating connections to message queues or databases on a per-request basis exhau
 
 ## 20. Database Seeding & Mock Workflows
 To support development onboarding and local verification, a bootstrap seeder script (`backend/scripts/seed.py`) populates the following structures:
-- **Default Identity**: Registers a seed administrator (`admin@neuromesh.local`) with bcrypt-hashed credentials.
+- **Default Identity**: Registers a seed administrator (`admin@neuromesh.com`) with bcrypt-hashed credentials.
 - **Market Analyzer Flow**: Seeds a sample Directed Acyclic Graph (DAG) with nodes matching LLM researcher agents, web search execution tools, and editor approval nodes.
 

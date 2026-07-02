@@ -116,7 +116,26 @@ make format
 
 ---
 
-## Documentation
+## Production Security Hardening
+
+To safeguard deployment configurations, NeuroMeshOSS implements built-in defenses by default:
+* **Path Traversal Shielding:** Filesystem tool providers block relative escapes (using `os.path.commonpath`). File reads are bound within active workspace folders.
+* **SSRF Mitigation:** The Model Context Protocol (MCP) HTTP client blocks private loopback or metadata subnets (e.g. `127.0.0.1`, `169.254.169.254`), preventing unauthorized intranet probing.
+* **Password Hashing:** User passwords are encrypted with bcrypt and validate standard length complexity (minimum 8 characters).
+
+---
+
+## Running Diagnostics
+
+If you encounter issues during local-first setup, use the diagnostic command:
+```bash
+poetry run neuromesh doctor
+```
+This runs connection checks against PostgreSQL, Redis streams, and checks for active Ollama and MCP configurations.
+
+---
+
+## Documentation & Community
 
 Full design documents and guides are available at:
 * **System Architecture & Decision Log:** [ARCHITECTURE.md](file:///C:/Users/LOQ/Desktop/NeuroMeshOSS/ARCHITECTURE.md)

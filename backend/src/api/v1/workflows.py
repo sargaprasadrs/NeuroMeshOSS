@@ -60,11 +60,13 @@ async def create_workflow(
 @router.post("/{workflow_id}/run", response_model=None)
 async def run_workflow(
     workflow_id: UUID,
+    request: Request,
     idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> Any:
     try:
-        run = await service.trigger_run(workflow_id)
+        correlation_id = getattr(request.state, "correlation_id", None)
+        run = await service.trigger_run(workflow_id, correlation_id=correlation_id)
         return {
             "run_id": str(run.id),
             "workflow_id": str(run.workflow_id),

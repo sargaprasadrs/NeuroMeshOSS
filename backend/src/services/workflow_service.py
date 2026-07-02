@@ -40,7 +40,7 @@ class WorkflowService:
         logger.info(f"Workflow {saved.id} created successfully.")
         return saved
 
-    async def trigger_run(self, workflow_id: UUID) -> Run:
+    async def trigger_run(self, workflow_id: UUID, correlation_id: str | None = None) -> Run:
         """Triggers a new execution run of a workflow and enqueues the execution command."""
         workflow = await self.workflow_repo.get_by_id(workflow_id)
         if not workflow or not workflow.is_active:
@@ -62,6 +62,7 @@ class WorkflowService:
                 "run_id": str(saved_run.id),
                 "workflow_id": str(workflow_id),
                 "action": "START",
+                "correlation_id": correlation_id,
             },
         )
 

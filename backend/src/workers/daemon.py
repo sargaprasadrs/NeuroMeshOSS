@@ -13,11 +13,12 @@ async def handle_workflow_job(payload: Dict[str, Any]) -> bool:
     run_id = payload.get("run_id")
     workflow_id = payload.get("workflow_id")
     action = payload.get("action")
-    logger.info(f"Worker received execution job. Run: {run_id}, Workflow: {workflow_id}, Action: {action}")
+    correlation_id = payload.get("correlation_id", "N/A")
+    logger.info(f"[Correlation ID: {correlation_id}] Worker received execution job. Run: {run_id}, Workflow: {workflow_id}, Action: {action}")
     
     # Stub: simulated node execution steps
     await asyncio.sleep(0.5)
-    logger.info(f"Execution step complete for Run {run_id}")
+    logger.info(f"[Correlation ID: {correlation_id}] Execution step complete for Run {run_id}")
     return True
 
 
