@@ -4,6 +4,8 @@ import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import { Play, ShieldAlert, Cpu, Layers, Activity, Plus, Sparkles, KeyRound } from "lucide-react";
 import { LogConsole } from "@/components/LogConsole";
+import { SpotlightCard } from "@/components/SpotlightCard";
+import SwarmIntelligence from "@/components/SwarmIntelligence";
 
 export default function Dashboard() {
   const [logs, setLogs] = useState<string[]>([
@@ -52,37 +54,45 @@ export default function Dashboard() {
       {/* Grid Stats Header */}
       <main className="flex-1 p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Link href="/agents" className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between hover:border-zinc-700 transition">
-            <div>
-              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Active Agents</p>
-              <h3 className="text-2xl font-bold mt-1 text-zinc-200">12</h3>
-            </div>
-            <Cpu className="h-8 w-8 text-emerald-500 opacity-80" />
-          </Link>
+          <SpotlightCard className="p-0 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/60 rounded-xl" glowColor="rgba(16, 185, 129, 0.06)">
+            <Link href="/agents" className="flex items-center justify-between p-4 w-full h-full focus:outline-none" aria-label="View Active Agents Registry">
+              <div>
+                <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Active Agents</p>
+                <h3 className="text-2xl font-bold mt-1 text-zinc-200">12</h3>
+              </div>
+              <Cpu className="h-8 w-8 text-emerald-500 opacity-80" />
+            </Link>
+          </SpotlightCard>
 
-          <Link href="/workflows" className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between hover:border-zinc-700 transition">
-            <div>
-              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Running Flows</p>
-              <h3 className="text-2xl font-bold mt-1 text-zinc-200">3</h3>
-            </div>
-            <Activity className="h-8 w-8 text-blue-500 opacity-80" />
-          </Link>
+          <SpotlightCard className="p-0 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/60 rounded-xl" glowColor="rgba(59, 130, 246, 0.06)">
+            <Link href="/workflows" className="flex items-center justify-between p-4 w-full h-full focus:outline-none" aria-label="View Active Workflows List">
+              <div>
+                <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Running Flows</p>
+                <h3 className="text-2xl font-bold mt-1 text-zinc-200">3</h3>
+              </div>
+              <Activity className="h-8 w-8 text-blue-500 opacity-80" />
+            </Link>
+          </SpotlightCard>
 
-          <Link href="/metrics" className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between hover:border-zinc-700 transition">
-            <div>
-              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Queue Latency</p>
-              <h3 className="text-2xl font-bold mt-1 text-zinc-200">2ms</h3>
-            </div>
-            <Activity className="h-8 w-8 text-purple-500 opacity-80" />
-          </Link>
+          <SpotlightCard className="p-0 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/60 rounded-xl" glowColor="rgba(168, 85, 247, 0.06)">
+            <Link href="/metrics" className="flex items-center justify-between p-4 w-full h-full focus:outline-none" aria-label="View Queue Telemetry Metrics">
+              <div>
+                <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Queue Latency</p>
+                <h3 className="text-2xl font-bold mt-1 text-zinc-200">2ms</h3>
+              </div>
+              <Activity className="h-8 w-8 text-purple-500 opacity-80" />
+            </Link>
+          </SpotlightCard>
 
-          <Link href="/secrets" className="bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl flex items-center justify-between hover:border-zinc-700 transition">
-            <div>
-              <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Secrets Vault</p>
-              <h3 className="text-2xl font-bold mt-1 text-zinc-200">4</h3>
-            </div>
-            <ShieldAlert className="h-8 w-8 text-amber-500 opacity-80" />
-          </Link>
+          <SpotlightCard className="p-0 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/60 rounded-xl" glowColor="rgba(245, 158, 11, 0.06)">
+            <Link href="/secrets" className="flex items-center justify-between p-4 w-full h-full focus:outline-none" aria-label="View Encrypted Secrets Vault">
+              <div>
+                <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Secrets Vault</p>
+                <h3 className="text-2xl font-bold mt-1 text-zinc-200">4</h3>
+              </div>
+              <ShieldAlert className="h-8 w-8 text-amber-500 opacity-80" />
+            </Link>
+          </SpotlightCard>
         </section>
 
         {/* Dashboard Workspaces Split */}
@@ -117,12 +127,14 @@ export default function Dashboard() {
           {/* Center visual editor placeholder */}
           <section className="lg:col-span-6 bg-zinc-900/30 border border-zinc-800 rounded-xl flex flex-col items-center justify-center p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293710_1px,transparent_1px),linear-gradient(to_bottom,#1f293710_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-            <div className="z-10 text-center flex flex-col items-center gap-2">
-              <Layers className="h-12 w-12 text-zinc-600 mb-2" />
-              <h5 className="font-semibold text-zinc-300">Visual Workflow Editor</h5>
-              <p className="text-sm text-zinc-500 max-w-sm">
-                Connect agents, vector storage databases, and human approval steps to orchestrate complex execution loops.
-              </p>
+            <div className="z-10 text-center flex flex-col items-center gap-4 w-full">
+              <div className="flex flex-col items-center gap-1">
+                <h5 className="font-semibold text-zinc-300">Visual Workflow Editor</h5>
+                <p className="text-xs text-zinc-500 max-w-sm">
+                  Connect agents, vector databases, and human approvals.
+                </p>
+              </div>
+              <SwarmIntelligence />
             </div>
           </section>
 
