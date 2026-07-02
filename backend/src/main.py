@@ -26,6 +26,12 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Handles startup and shutdown lifespans (e.g. pools and triggers)."""
     logger.info("Initializing NeuroMeshOSS Engine Lifespan...")
+    
+    # Instantiate Redis queue and event bus singletons to reuse connection pools
+    from src.adapters.queue.redis_queue import RedisJobQueue, RedisEventBus
+    app.state.job_queue = RedisJobQueue(settings.REDIS_URL)
+    app.state.event_bus = RedisEventBus(settings.REDIS_URL)
+    
     # Validate database connection pool
     try:
         from src.adapters.database.session import engine
@@ -41,6 +47,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     logger.info("Tearing down NeuroMeshOSS Engine Lifespan...")
+    
+    # Close Redis singleton connection pools
+    await app.state.job_queue.close()
+    await app.state.event_bus.close()
+    
     from src.adapters.database.session import engine
     await engine.dispose()
     logger.info("Database engine resources released.")

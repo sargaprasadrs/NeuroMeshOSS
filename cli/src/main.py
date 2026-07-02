@@ -86,8 +86,13 @@ def worker(
 @app.command()
 def config() -> None:
     """Displays active configuration variables."""
-    # Importing backend settings if available
-    sys.path.append(os.path.abspath("backend"))
+    # Importing backend settings using robust absolute paths
+    backend_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "backend",
+    )
+    if backend_dir not in sys.path:
+        sys.path.append(backend_dir)
     try:
         from src.config.settings import settings
         table = Table(title="NeuroMeshOSS Configurations")

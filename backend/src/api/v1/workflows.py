@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import Any, Dict
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status, Header, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from src.core.entities.workflow import Workflow
@@ -26,11 +26,14 @@ class HumanApprovalRequest(BaseModel):
     approval_data: Dict[str, Any]
 
 
-def get_workflow_service(session: AsyncSession = Depends(get_db_session)) -> WorkflowService:
+def get_workflow_service(
+    request: Request,
+    session: AsyncSession = Depends(get_db_session),
+) -> WorkflowService:
     workflow_repo = SqlAlchemyWorkflowRepository(session)
     run_repo = SqlAlchemyRunRepository(session)
-    job_queue = RedisJobQueue(settings.REDIS_URL)
-    event_bus = RedisEventBus(settings.REDIS_URL)
+    job_queue = request.app.state.job_queue
+    event_bus = request.app.state.event_bus
     return WorkflowService(workflow_repo, run_repo, job_queue, event_bus)
 
 

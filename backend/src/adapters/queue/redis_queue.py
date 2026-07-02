@@ -57,6 +57,10 @@ class RedisJobQueue(IJobQueue):
             except Exception as e:
                 logger.error(f"Error executing task in worker group {group_name}: {e}", exc_info=True)
 
+    async def close(self) -> None:
+        """Closes the underlying Redis connection pool."""
+        await self.client.close()
+
 
 class RedisEventBus(IEventBus):
     def __init__(self, redis_url: str) -> None:
@@ -88,3 +92,7 @@ class RedisEventBus(IEventBus):
                 except Exception as e:
                     logger.error(f"Error in EventBus subscription handler: {e}", exc_info=True)
             # Short yield loop check
+
+    async def close(self) -> None:
+        """Closes the underlying Redis connection pool."""
+        await self.client.close()

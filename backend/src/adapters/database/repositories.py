@@ -173,8 +173,6 @@ class SqlAlchemyRunRepository(IRunRepository):
         return self._step_to_entity(model)
 
     async def get_steps(self, run_id: UUID) -> Sequence[RunStep]:
-        stmt = select(RunStepModel).where(RunStepModel.run_id == run_id).order_index(RunStepModel.created_at)
-        # Using basic order_by (order_index was a typo in drafting)
         stmt = select(RunStepModel).where(RunStepModel.run_id == run_id).order_by(RunStepModel.created_at)
         result = await self.session.execute(stmt)
         models = result.scalars().all()

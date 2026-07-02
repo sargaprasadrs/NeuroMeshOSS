@@ -46,7 +46,7 @@ manager = ConnectionManager()
 @router.websocket("/runs/{run_id}")
 async def websocket_endpoint(websocket: WebSocket, run_id: str) -> None:
     await manager.connect(run_id, websocket)
-    event_bus = RedisEventBus(settings.REDIS_URL)
+    event_bus = websocket.app.state.event_bus
 
     # Define the event handler for this specific run_id subscription
     async def handle_bus_event(event_type: str, payload: dict) -> None:
