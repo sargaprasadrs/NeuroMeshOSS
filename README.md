@@ -1,26 +1,27 @@
 # NeuroMeshOSS
+# NeuroMeshOSS
 
 NeuroMeshOSS is an open-source, local-first AI Agent Orchestration Platform designed to build, schedule, trace, and execute autonomous multi-agent graph workflows.
 
 Think of it as:
+
 > **Docker + Kubernetes + LangGraph + MCP + n8n + Temporal + OpenTelemetry**
 > but significantly simpler, lighter, modular, and developer-friendly.
 
-[![CI Status](https://github.com/sargaprasadrs/NeuroMeshOSS/actions/workflows/ci.yml/badge.svg)(https://github.com/sargaprasadrs/NeuroMeshOSS/actions)
+[![CI Status](https://github.com/sargaprasadrs/NeuroMeshOSS/actions/workflows/ci.yml/badge.svg)](https://github.com/sargaprasadrs/NeuroMeshOSS/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)
 
 ---
 
 ## Core Characteristics
 
-* **Modular Architecture:** Bounded domain entities decoupled from core infrastructures via ports & adapters (Hexagonal Architecture).
-* **Local-First, Cloud-Optional:** Native integration with local models (Ollama) and lightweight local queues (Redis Streams), designed to scale up to Kubernetes.
-* **Model Context Protocol (MCP) Support:** Open standards client host resolving tool environments dynamically.
-* **Telemetry by Design:** Native trace outputs instrumented with OpenTelemetry APIs.
+- **Modular Architecture:** Bounded domain entities are decoupled from infrastructure using Ports & Adapters (Hexagonal Architecture).
+- **Local-First, Cloud-Optional:** Native integration with local models (Ollama) and lightweight local queues (Redis Streams), while remaining capable of scaling to Kubernetes.
+- **Model Context Protocol (MCP) Support:** Implements an MCP client host that dynamically discovers and resolves tool environments.
+- **Telemetry by Design:** Built-in distributed tracing and observability powered by OpenTelemetry.
 
 ---
-
 ## Repository Structure
 
 The monorepo is organized as follows:
