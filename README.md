@@ -367,7 +367,7 @@ You should now be able to access the NeuroMeshOSS workspace dashboard.
 
 ---
 
-## 🩺 Diagnostics
+## Diagnostics
 
 If you encounter issues during setup, run:
 
