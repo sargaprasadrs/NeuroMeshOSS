@@ -1,4 +1,7 @@
+import logging
+import socket
 from collections.abc import AsyncGenerator
+from urllib.parse import urlparse
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -6,15 +9,39 @@ from sqlalchemy.ext.asyncio import (
 )
 from src.config.settings import settings
 
-# Configure async engine with production-grade pooling defaults
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    pool_size=20,
-    max_overflow=10,
-    pool_recycle=1800,
-    pool_pre_ping=True,
-    echo=settings.DEBUG,
-)
+logger = logging.getLogger(__name__)
+
+# Check if PostgreSQL is reachable; otherwise fallback to local SQLite
+db_url = settings.DATABASE_URL
+use_sqlite = False
+
+if "postgresql" in db_url.lower():
+    try:
+        parsed = urlparse(db_url)
+        # Attempt a quick TCP connection to test availability
+        s = socket.create_connection((parsed.hostname, parsed.port or 5432), timeout=1.0)
+        s.close()
+        logger.info("Successfully connected to PostgreSQL container database.")
+    except Exception:
+        logger.warning("PostgreSQL database is unreachable. Falling back to local SQLite (neuromesh.db).")
+        use_sqlite = True
+        db_url = "sqlite+aiosqlite:///neuromesh.db"
+
+# Configure async engine
+if use_sqlite:
+    engine = create_async_engine(
+        db_url,
+        echo=settings.DEBUG,
+    )
+else:
+    engine = create_async_engine(
+        db_url,
+        pool_size=20,
+        max_overflow=10,
+        pool_recycle=1800,
+        pool_pre_ping=True,
+        echo=settings.DEBUG,
+    )
 
 # Async session factory
 AsyncSessionLocal = async_sessionmaker(

@@ -19,10 +19,10 @@ timeout /t 3 /nobreak >nul
 echo.
 
 echo [2/4] Launching FastAPI Control Plane API...
-start cmd /k "title NeuroMesh API && echo Starting NeuroMesh API Control Plane... && cd backend && python -m poetry run uvicorn src.main:create_app --factory --host 127.0.0.1 --port 8000 --reload"
+start cmd /k "title NeuroMesh API && echo Starting NeuroMesh API Control Plane... && cd backend && .venv\Scripts\uvicorn src.main:create_app --factory --host 127.0.0.1 --port 8000 --reload"
 
 echo [3/4] Launching Worker Execution Daemon...
-start cmd /k "title NeuroMesh Worker && echo Starting NeuroMesh Worker Daemon... && cd backend && python -m poetry run python src/workers/daemon.py"
+start cmd /k "title NeuroMesh Worker && echo Starting NeuroMesh Worker Daemon... && cd backend && .venv\Scripts\python src/workers/daemon.py"
 
 echo [4/4] Launching Next.js Console Dashboard...
 start cmd /k "title NeuroMesh Dashboard && echo Starting NeuroMesh Next.js Dashboard UI... && cd frontend && npm run dev"

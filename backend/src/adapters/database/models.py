@@ -1,8 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 from typing import Any, Dict
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Index
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Index, JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -28,7 +27,7 @@ class WorkflowModel(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    definition: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    definition: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
@@ -42,7 +41,7 @@ class RunModel(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     workflow_id: Mapped[UUID] = mapped_column(ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(50), default="PENDING", nullable=False, index=True)
-    current_state: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    current_state: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -59,9 +58,9 @@ class RunStepModel(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     run_id: Mapped[UUID] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True)
     node_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    input: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    output: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    traces: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    input: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
+    output: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
+    traces: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
     duration_ms: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 

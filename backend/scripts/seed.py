@@ -32,6 +32,11 @@ SAMPLE_WORKFLOW_DEF = {
 
 
 async def seed_data() -> None:
+    # Create tables if not exists (crucial for SQLite fallback)
+    from src.adapters.database.models import Base
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     async with AsyncSessionLocal() as session:
         try:
             logger.info("Starting database seeding...")
