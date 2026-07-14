@@ -35,14 +35,36 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Validate database connection pool
     try:
         from src.adapters.database.session import engine
+        from sqlalchemy import text
         async with engine.connect() as conn:
-            await conn.execute(type("MockText", (), {"text": lambda x: "SELECT 1"})("SELECT 1"))
+            await conn.execute(text("SELECT 1"))
         logger.info("Database connection validated successfully.")
     except Exception as e:
         logger.error(f"Failed database connection pool initialization: {e}")
 
-    # Set up trace telemetry
-    setup_telemetry(app)
+    # Initialize workflow_engine inside src.workers.daemon if fallback is active
+    from src.adapters.queue.redis_queue import check_redis_alive
+    if not check_redis_alive(settings.REDIS_URL):
+        from src.services.plugin_loader import PluginRegistry, PluginLoader
+        from src.services.mcp_client import McpClientPool
+        from src.services.workflow_engine import WorkflowEngine
+        import src.workers.daemon as daemon
+        import os
+        
+        daemon.plugin_registry = PluginRegistry()
+        plugin_loader = PluginLoader(daemon.plugin_registry)
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        plugins_dir = os.path.join(base_dir, "plugins")
+        plugin_loader.load_plugins_from_directory(plugins_dir)
+        
+        daemon.mcp_client_pool = McpClientPool()
+        daemon.event_bus = app.state.event_bus
+        daemon.workflow_engine = WorkflowEngine(
+            event_bus=app.state.event_bus,
+            plugin_registry=daemon.plugin_registry,
+            mcp_client_pool=daemon.mcp_client_pool
+        )
+        logger.info("Successfully initialized workflow engine fallback inside API process.")
 
     yield
 
@@ -105,6 +127,9 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(workflow_router, prefix="/api/v1")
     app.include_router(ws_router, prefix="/api")
+
+    # Set up trace telemetry before returning the application instance
+    setup_telemetry(app)
 
     return app
 

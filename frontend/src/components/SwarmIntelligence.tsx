@@ -1,31 +1,40 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
-const SWARM_CONCEPTS: Record<string, string> = {
-  Stigmergy: "Indirect coordination through environmental cues, like pheromone paths left by foraging bees.",
-  "Self-Organization": "Global order emerging from local interactions among individuals, without any central lead.",
-  "Feedback Loops": "Positive loops amplify useful behaviors, while negative loops stabilize the colony structure.",
-  Decentralization: "System operations distributed across the swarm, preventing single points of failure.",
-  Emergence: "Complex, intelligent behavior arising from simple agents following basic local rules.",
-  "Local Rules": "Individuals react only to their immediate neighbors and environment, requiring no global map.",
-  "Swarm Intel": "Collective behavior of self-organized systems, outperforming any single individual.",
+const NETWORK_CONCEPTS: Record<string, string> = {
+  "Stigmergy Relay": "Decentralized node-to-node memory signaling and environmental routing logs.",
+  "Self-Organization Core": "Dynamic flow execution and path resolving without gateway controllers.",
+  "Feedback Balancer": "Real-time query distribution across local active worker networks.",
+  "Decentralized State": "Isolated micro-agent executions preventing central failure blocks.",
+  "Emergent Compiler": "High-level visual graph compiled from individual node rule sets.",
+  "Consensus Gateway": "Sub-millisecond validation layers routing signals between adjacent hosts.",
+  "Cognitive Swarm": "Collaborative neural execution states resolving complex tasks in parallel.",
 };
 
-const CONCEPT_KEYS = Object.keys(SWARM_CONCEPTS);
+const CONCEPT_KEYS = Object.keys(NETWORK_CONCEPTS);
 
 export default function SwarmIntelligence() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [activeSignals, setActiveSignals] = useState<boolean[]>([]);
 
   useEffect(() => {
     setMounted(true);
+    setActiveSignals(Array.from({ length: 15 }, () => Math.random() > 0.5));
+
+    // Periodic subtle activation shifts
+    const interval = setInterval(() => {
+      setActiveSignals((prev) =>
+        prev.map((val) => (Math.random() > 0.8 ? !val : val))
+      );
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const radius = 22; // Hex radius (scaled down to fit as dashboard card)
-  const hexWidth = radius * 1.5;
-  const hexHeight = radius * Math.sqrt(3);
-
+  const spacingX = 42;
+  const spacingY = 40;
   const rows = 3;
   const cols = 5;
   const cells: { id: number; r: number; c: number; cx: number; cy: number; label: string }[] = [];
@@ -33,8 +42,9 @@ export default function SwarmIntelligence() {
   let idx = 0;
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const cx = c * hexWidth + 30;
-      const cy = r * hexHeight + (c % 2 === 0 ? 0 : hexHeight / 2) + 25;
+      // Stagger layout for an organic mesh look
+      const cx = c * spacingX + 22 + (r % 2 === 1 ? spacingX / 2 : 0);
+      const cy = r * spacingY + 22;
       cells.push({
         id: idx,
         r,
@@ -53,59 +63,74 @@ export default function SwarmIntelligence() {
     if (!cellA || !cellB) return 0;
     const dx = cellA.cx - cellB.cx;
     const dy = cellA.cy - cellB.cy;
-    return Math.sqrt(dx * dx + dy * dy) / (radius * 1.73);
+    return Math.sqrt(dx * dx + dy * dy) / spacingX;
   };
 
   const activeLabel = hoveredIndex !== null ? cells[hoveredIndex]?.label : null;
-  const activeDesc = activeLabel ? SWARM_CONCEPTS[activeLabel] : null;
+  const activeDesc = activeLabel ? NETWORK_CONCEPTS[activeLabel] : null;
 
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-[340px] select-none">
+    <div className="flex flex-col items-center gap-5 w-full select-none">
       <svg
-        viewBox="0 0 160 120"
-        className="w-full h-auto max-h-[110px]"
+        viewBox="0 0 210 124"
+        className="w-full h-auto max-h-[140px]"
         style={{ overflow: "visible" }}
       >
+        {/* Draw connection paths */}
+        <g stroke="rgba(244, 244, 245, 0.04)" strokeWidth="1">
+          {cells.map((cellA) =>
+            cells.map((cellB) => {
+              if (cellA.id < cellB.id) {
+                const dist = getDistance(cellA.id, cellB.id);
+                // Draw lines between near neighbors
+                if (dist > 0.8 && dist < 1.3) {
+                  const isHighlighted =
+                    hoveredIndex !== null &&
+                    (hoveredIndex === cellA.id || hoveredIndex === cellB.id);
+                  return (
+                    <line
+                      key={`${cellA.id}-${cellB.id}`}
+                      x1={cellA.cx}
+                      y1={cellA.cy}
+                      x2={cellB.cx}
+                      y2={cellB.cy}
+                      stroke={
+                        isHighlighted
+                          ? "rgba(16, 185, 129, 0.3)" // Subtle emerald connection glow
+                          : "rgba(244, 244, 245, 0.05)"
+                      }
+                      strokeWidth={isHighlighted ? 1.2 : 0.8}
+                      className="transition-all duration-300"
+                    />
+                  );
+                }
+              }
+              return null;
+            })
+          )}
+        </g>
+
+        {/* Draw nodes */}
         {cells.map((cell) => {
-          const distance = hoveredIndex !== null ? getDistance(hoveredIndex, cell.id) : 0;
           const isHovered = hoveredIndex === cell.id;
-          const isNear = hoveredIndex !== null && distance < 2.5;
+          const isSignalActive = activeSignals[cell.id] ?? false;
 
-          const delay = hoveredIndex !== null ? distance * 70 : 0;
+          let radius = 4;
+          let nodeStroke = "border-zinc-800";
+          let nodeFill = "rgba(39, 39, 42, 0.4)"; // zinc-800/40
+          let nodeOpacity = 0.6;
 
-          let opacity = 0.5;
-          let strokeColor = "rgba(63, 63, 70, 0.3)";
-          let fillColor = "rgba(24, 24, 27, 0.1)";
-
-          if (hoveredIndex !== null) {
-            if (isHovered) {
-              opacity = 1.0;
-              strokeColor = "rgba(16, 185, 129, 0.95)"; // Emerald
-              fillColor = "rgba(16, 185, 129, 0.15)";
-            } else if (isNear) {
-              const strength = 1 - distance / 2.5;
-              opacity = 0.2 + strength * 0.6;
-              strokeColor = `rgba(16, 185, 129, ${0.3 + strength * 0.5})`;
-              fillColor = `rgba(16, 185, 129, ${strength * 0.08})`;
-            } else {
-              opacity = 0.08;
-            }
+          if (isHovered) {
+            radius = 6;
+            nodeStroke = "#10b981"; // Emerald accent
+            nodeFill = "rgba(16, 185, 129, 0.15)";
+            nodeOpacity = 1.0;
+          } else if (isSignalActive) {
+            nodeFill = "rgba(244, 244, 245, 0.3)";
+            nodeOpacity = 0.8;
           }
-
-          const cx = cell.cx;
-          const cy = cell.cy;
-          const w = radius * Math.sqrt(3);
-          const pathD = `
-            M ${cx} ${cy - radius}
-            L ${cx + w / 2} ${cy - radius / 2}
-            L ${cx + w / 2} ${cy + radius / 2}
-            L ${cx} ${cy + radius}
-            L ${cx - w / 2} ${cy + radius / 2}
-            L ${cx - w / 2} ${cy - radius / 2}
-            Z
-          `;
 
           return (
             <g
@@ -114,15 +139,29 @@ export default function SwarmIntelligence() {
               onMouseLeave={() => setHoveredIndex(null)}
               className="cursor-pointer"
             >
-              <path
-                d={pathD}
-                fill={fillColor}
-                stroke={strokeColor}
+              {/* Outer hover ring */}
+              {isHovered && (
+                <circle
+                  cx={cell.cx}
+                  cy={cell.cy}
+                  r={10}
+                  fill="none"
+                  stroke="rgba(16, 185, 129, 0.15)"
+                  strokeWidth="1.5"
+                  className="animate-ping"
+                />
+              )}
+              {/* Core Node */}
+              <circle
+                cx={cell.cx}
+                cy={cell.cy}
+                r={radius}
+                fill={nodeFill}
+                stroke={isHovered ? nodeStroke : "rgba(113, 113, 122, 0.2)"}
                 strokeWidth={isHovered ? 1.5 : 1}
+                opacity={nodeOpacity}
                 style={{
-                  opacity,
-                  transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-                  transitionDelay: hoveredIndex !== null ? `${delay}ms` : "0ms",
+                  transition: "all 200ms cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               />
             </g>
@@ -130,14 +169,21 @@ export default function SwarmIntelligence() {
         })}
       </svg>
 
-      <div className="h-10 text-center flex items-center justify-center">
+      {/* Dynamic Status Text (Linear Style) */}
+      <div className="h-12 w-full text-center flex items-center justify-center bg-zinc-950 border border-zinc-900 rounded-md px-4 py-2">
         {activeLabel && activeDesc ? (
-          <div>
-            <h6 className="text-emerald-500 text-[10px] uppercase font-bold tracking-wider mb-0.5">{activeLabel}</h6>
-            <p className="text-[10px] text-zinc-400 max-w-[280px] leading-snug">{activeDesc}</p>
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-[10px] uppercase font-semibold text-emerald-500 tracking-wider">
+              {activeLabel}
+            </span>
+            <span className="text-[10px] text-zinc-400 font-normal leading-tight max-w-[280px]">
+              {activeDesc}
+            </span>
           </div>
         ) : (
-          <p className="text-[10px] text-zinc-500 italic">Hover hex cells to trigger communication waves</p>
+          <span className="text-[10px] text-zinc-500 font-medium">
+            Hover network nodes to analyze telemetry relays
+          </span>
         )}
       </div>
     </div>

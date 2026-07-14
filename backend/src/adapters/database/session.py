@@ -58,9 +58,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         try:
             yield session
-            # Only commit if there are active changes in the session
-            if session.new or session.dirty or session.deleted:
-                await session.commit()
+            await session.commit()
         except Exception:
             await session.rollback()
             raise

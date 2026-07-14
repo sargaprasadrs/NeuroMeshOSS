@@ -120,7 +120,7 @@ class WorkflowEngine:
                     version=run.version,
                     created_at=run.created_at,
                 )
-                await run_repo.save(run)
+                run = await run_repo.save(run)
                 await session.commit()
             
             elif action == "START":
@@ -141,7 +141,7 @@ class WorkflowEngine:
                     version=run.version,
                     created_at=run.created_at,
                 )
-                await run_repo.save(run)
+                run = await run_repo.save(run)
                 await session.commit()
                 
                 await self.event_bus.publish(

@@ -124,3 +124,44 @@ async def list_workflows(
         ],
         "next_cursor": next_cursor,
     }
+
+
+@router.get("/runs/{run_id}", response_model=None)
+async def get_run(
+    run_id: UUID,
+    service: WorkflowService = Depends(get_workflow_service),
+) -> Any:
+    """Retrieves status and variables for a specific run."""
+    run = await service.run_repo.get_by_id(run_id)
+    if not run:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found")
+    return {
+        "id": str(run.id),
+        "workflow_id": str(run.workflow_id),
+        "status": run.status.value,
+        "current_state": run.current_state,
+        "version": run.version,
+        "created_at": run.created_at.isoformat(),
+    }
+
+
+@router.get("/runs/{run_id}/steps", response_model=None)
+async def get_run_steps(
+    run_id: UUID,
+    service: WorkflowService = Depends(get_workflow_service),
+) -> Any:
+    """Retrieves execution step trace checkpoints for a specific run."""
+    steps = await service.get_run_steps(run_id)
+    return [
+        {
+            "id": str(s.id),
+            "run_id": str(s.run_id),
+            "node_id": s.node_id,
+            "input": s.input,
+            "output": s.output,
+            "traces": s.traces,
+            "duration_ms": s.duration_ms,
+            "created_at": s.created_at.isoformat(),
+        }
+        for s in steps
+    ]
