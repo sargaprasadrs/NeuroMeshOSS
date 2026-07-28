@@ -1,23 +1,28 @@
-"use client";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { Providers } from "./providers";
+import "@/app/globals.css";
 
-import React, { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import "@/app/globals.css"; // Global styles import
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+export const metadata: Metadata = {
+  title: "NeuroMeshOSS — AI Agent Orchestration Platform",
+  description: "Build, schedule, trace, and execute autonomous multi-agent workflows.",
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Create query client instance per session instance
-  const [queryClient] = useState(() => new QueryClient());
-
   return (
-    <html lang="en" className="dark">
-      <body className="bg-zinc-950 text-zinc-50 antialiased min-h-screen">
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+    <html lang="en" className={`${inter.variable} dark antialiased`}>
+      <body className="font-sans bg-neutral-900 text-neutral-50 overflow-x-hidden min-h-screen">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

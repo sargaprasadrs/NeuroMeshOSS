@@ -7,7 +7,7 @@ from src.core.entities.run import Run, RunStep, RunStatus
 from src.core.entities.workflow import Workflow, WorkflowDefinition, WorkflowNode, WorkflowEdge
 from src.core.ports.repositories import IRunRepository
 from src.core.ports.queue import IEventBus
-from src.services.workflow_engine import WorkflowEngine, NodeExecutionResult
+from src.services.workflow_engine import WorkflowEngine
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────

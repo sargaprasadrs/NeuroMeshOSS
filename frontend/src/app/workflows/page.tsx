@@ -2,8 +2,13 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { Layers, ArrowLeft, Play, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Play, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { Header } from "@/components/header";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 export default function WorkflowsPage() {
   const {
@@ -19,113 +24,121 @@ export default function WorkflowsPage() {
     fetchWorkflows();
   }, [fetchWorkflows]);
 
+  const statusVariant = (status: string) => {
+    switch (status) {
+      case "SUCCESS": return "success";
+      case "RUNNING":
+      case "PENDING": return "info";
+      case "PAUSED": return "warning";
+      default: return "error";
+    }
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50 backdrop-blur px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="p-1 bg-zinc-800 hover:bg-zinc-700 rounded transition text-zinc-300">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <Layers className="h-6 w-6 text-emerald-500" />
-            <span className="font-bold text-lg text-zinc-100">Workflows & Run History</span>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen">
+      <Header />
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-6 py-2">
-          {error}
-        </div>
-      )}
-
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full flex flex-col gap-6">
-        {/* Workflow Definitions */}
-        <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 flex flex-col gap-4">
-          <h3 className="font-semibold text-lg text-zinc-200">Registered Workflows</h3>
-          {workflowsLoading ? (
-            <div className="flex items-center justify-center py-8 text-zinc-500">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Loading workflows...
+      <main className="pt-24 pb-16">
+        <div className="container-custom">
+          {/* Page header */}
+          <div className="flex items-center gap-4 mb-8">
+            <Link href="/" className="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-white/5 transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-white">
+                Workflows
+              </h1>
+              <p className="text-sm text-neutral-500 mt-1">Manage and execute your agent workflows</p>
             </div>
-          ) : workflows.length === 0 ? (
-            <p className="text-sm text-zinc-500 text-center py-6">No workflows found. Create one via the API or CLI.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                    <th className="py-3 px-4">Workflow ID</th>
-                    <th className="py-3 px-4">Name</th>
-                    <th className="py-3 px-4">Nodes</th>
-                    <th className="py-3 px-4">Version</th>
-                    <th className="py-3 px-4">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-900 text-sm">
+          </div>
+
+          {error && (
+            <div className="mb-6 bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl">
+              {error}
+            </div>
+          )}
+
+          {/* Workflow definitions */}
+          <Card className="p-6 mb-6">
+            <h3 className="text-sm font-semibold text-white mb-4">Registered Workflows</h3>
+            {workflowsLoading ? (
+              <div className="flex items-center justify-center py-8 text-neutral-500">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Loading workflows...
+              </div>
+            ) : workflows.length === 0 ? (
+              <p className="text-sm text-neutral-600 text-center py-8">No workflows found. Create one via the API or CLI.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Nodes</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {workflows.map((wf) => (
-                    <tr key={wf.id} className="hover:bg-zinc-900/30 transition">
-                      <td className="py-3 px-4 font-mono text-emerald-400 text-xs">{wf.id.slice(0, 8)}...</td>
-                      <td className="py-3 px-4 font-medium text-zinc-300">{wf.name}</td>
-                      <td className="py-3 px-4 text-zinc-400">{wf.definition?.nodes?.length ?? 0}</td>
-                      <td className="py-3 px-4 text-zinc-400">v{wf.version}</td>
-                      <td className="py-3 px-4">
-                        <button
+                    <TableRow key={wf.id}>
+                      <TableCell className="font-mono text-xs text-neutral-500">{wf.id.slice(0, 8)}...</TableCell>
+                      <TableCell className="font-medium text-neutral-200">{wf.name}</TableCell>
+                      <TableCell className="text-neutral-400">{wf.definition?.nodes?.length ?? 0}</TableCell>
+                      <TableCell className="text-neutral-400">v{wf.version}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => triggerRun(wf.id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-semibold text-white transition"
+                          className="gap-1.5"
                         >
                           <Play className="h-3 w-3" /> Run
-                        </button>
-                      </td>
-                    </tr>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                </TableBody>
+              </Table>
+            )}
+          </Card>
 
-        {/* Run History */}
-        <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 flex flex-col gap-4">
-          <h3 className="font-semibold text-lg text-zinc-200">Execution Runs</h3>
-          {runs.length === 0 ? (
-            <p className="text-sm text-zinc-500 text-center py-6">No runs yet. Trigger a workflow to see execution history.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                    <th className="py-3 px-4">Run ID</th>
-                    <th className="py-3 px-4">Workflow ID</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Version</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-900 text-sm">
+          {/* Run history */}
+          <Card className="p-6">
+            <h3 className="text-sm font-semibold text-white mb-4">Execution Runs</h3>
+            {runs.length === 0 ? (
+              <p className="text-sm text-neutral-600 text-center py-8">No runs yet. Trigger a workflow to see history.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Run ID</TableHead>
+                    <TableHead>Workflow</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Version</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {runs.map((run) => (
-                    <tr key={run.run_id} className="hover:bg-zinc-900/30 transition">
-                      <td className="py-3 px-4 font-mono text-emerald-400 text-xs">{run.run_id.slice(0, 8)}...</td>
-                      <td className="py-3 px-4 font-mono text-zinc-400 text-xs">{run.workflow_id.slice(0, 8)}...</td>
-                      <td className="py-3 px-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold ${
-                          run.status === "SUCCESS" ? "bg-emerald-500/10 text-emerald-500" :
-                          run.status === "RUNNING" || run.status === "PENDING" ? "bg-blue-500/10 text-blue-400" :
-                          run.status === "PAUSED" ? "bg-amber-500/10 text-amber-400" :
-                          "bg-red-500/10 text-red-500"
-                        }`}>
+                    <TableRow key={run.run_id}>
+                      <TableCell className="font-mono text-xs text-emerald-400">{run.run_id.slice(0, 8)}...</TableCell>
+                      <TableCell className="font-mono text-xs text-neutral-500">{run.workflow_id.slice(0, 8)}...</TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(run.status)}>
                           {run.status === "SUCCESS" && <CheckCircle2 className="h-3 w-3" />}
-                          {(run.status === "RUNNING" || run.status === "PENDING") && <Clock className="h-3 w-3 animate-spin" />}
+                          {(run.status === "RUNNING" || run.status === "PENDING") && <Clock className="h-3 w-3" />}
                           {run.status === "FAILED" && <XCircle className="h-3 w-3" />}
                           {run.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-zinc-400">v{run.version}</td>
-                    </tr>
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-neutral-400">v{run.version}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                </TableBody>
+              </Table>
+            )}
+          </Card>
         </div>
       </main>
     </div>
