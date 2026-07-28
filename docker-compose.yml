@@ -1,4 +1,18 @@
-version: '3.8'
+# NeuroMeshOSS Local Development Infrastructure
+# ===============================================
+# This docker-compose file launches all required backing services:
+# - PostgreSQL 16: Primary state store, audit logs, secrets metadata
+# - Redis 7.2: Cache layer, job queue (Streams), and event bus (Pub/Sub)
+# - Qdrant 1.9: Vector database for long-term agent memory and embeddings
+# - MinIO: S3-compatible object storage for workflow artifacts
+# 
+# Volume data persists across restarts in named Docker volumes.
+# Health checks are configured for each service.
+#
+# Usage:
+#   docker compose up -d           # Start all services
+#   docker compose down            # Stop all services
+#   docker compose logs -f         # Follow service logs
 
 services:
   postgres:
@@ -18,6 +32,11 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── Redis Cache & Message Broker ─────────────────────────────────
+  # Redis serves dual purpose:
+  # 1. Cache layer for session state, rate limiting
+  # 2. Message broker using Redis Streams (job queue) and Pub/Sub (event bus)
+  # AOF persistence is enabled for queue message durability.
   redis:
     image: redis:7.2-alpine
     container_name: neuromesh-redis

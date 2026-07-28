@@ -1,9 +1,42 @@
+"""NeuroMeshOSS Database Seeder
+
+Populates the local PostgreSQL with a default admin user and a sample
+"Market Analyzer Agent Flow" workflow for development and testing.
+
+Usage:
+    cd backend
+    poetry run python scripts/seed.py
+
+What this script does:
+    1. Creates all required database tables (if they don't exist) using
+       SQLAlchemy's Base.metadata.create_all().
+    2. Inserts a default admin user (admin@neuromesh.com) if not present.
+    3. Creates a sample 4-node DAG workflow with Researcher -> Web Search ->
+       Writer -> Human Approval nodes.
+
+Default Credentials:
+    Email:    admin@neuromesh.com
+    Password: admin_secure_password_123
+
+Notes:
+    - This script is idempotent — running it multiple times is safe.
+    - Requires PostgreSQL to be running locally (via `docker compose up -d`).
+    - Uses sys.path manipulation to allow direct execution without PYTHONPATH.
+"""
+
 import asyncio
 import logging
+import sys
+import os
 from uuid import UUID, uuid4
 from sqlalchemy.ext.asyncio import AsyncSession
+
+# Ensure the backend directory is on the Python path so that imports from
+# src.* work when running as `python scripts/seed.py` directly.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.adapters.database.session import engine, AsyncSessionLocal
-from src.adapters.database.models import UserModel, WorkflowModel
+from src.adapters.database.models import Base, UserModel, WorkflowModel
 from src.services.auth_service import AuthService
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -32,6 +65,11 @@ SAMPLE_WORKFLOW_DEF = {
 
 
 async def seed_data() -> None:
+    # Create all tables if they don't exist yet
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables verified/created.")
+
     async with AsyncSessionLocal() as session:
         try:
             logger.info("Starting database seeding...")

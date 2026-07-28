@@ -47,9 +47,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         logger.error(f"Failed database connection pool initialization: {e}")
 
-    # Set up trace telemetry
-    setup_telemetry(app)
-
     yield
 
     logger.info("Tearing down NeuroMeshOSS Engine Lifespan...")
@@ -113,6 +110,9 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(workflow_router, prefix="/api/v1")
     app.include_router(ws_router, prefix="/api")
+
+    # Set up OpenTelemetry instrumentation (must be done before app starts)
+    setup_telemetry(app)
 
     return app
 
