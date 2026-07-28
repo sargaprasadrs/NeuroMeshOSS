@@ -1,7 +1,8 @@
 import asyncio
 import logging
 from typing import Dict, List
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+import jwt
 from src.adapters.queue.redis_queue import RedisEventBus
 from src.config.settings import settings
 
@@ -44,7 +45,24 @@ manager = ConnectionManager()
 
 
 @router.websocket("/runs/{run_id}")
-async def websocket_endpoint(websocket: WebSocket, run_id: str) -> None:
+async def websocket_endpoint(websocket: WebSocket, run_id: str, token: str | None = Query(None)) -> None:
+    # Authenticate WebSocket connection via token query parameter
+    if not token:
+        await websocket.close(code=4001, reason="Authentication required. Provide token as query parameter.")
+        return
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+        if "sub" not in payload:
+            await websocket.close(code=4001, reason="Invalid token: missing user identifier.")
+            return
+    except jwt.PyJWTError:
+        await websocket.close(code=4001, reason="Invalid or expired token.")
+        return
+
     await manager.connect(run_id, websocket)
     event_bus = websocket.app.state.event_bus
 

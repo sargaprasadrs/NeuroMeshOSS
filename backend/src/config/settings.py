@@ -1,4 +1,5 @@
 import os
+import secrets
 from typing import Literal
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -33,16 +34,24 @@ class Settings(BaseSettings):
     STORAGE_SECURE: bool = False
     STORAGE_BUCKET_NAME: str = Field(default="neuromesh-artifacts")
 
+    # CORS - comma-separated list of allowed origins (no wildcard in production)
+    CORS_ALLOWED_ORIGINS: str = Field(
+        default="http://localhost:3000,http://127.0.0.1:3000",
+        description="Comma-separated list of allowed CORS origins",
+    )
+
     # Auth & Tokens
     JWT_SECRET_KEY: str = Field(
-        default="neuromesh_super_secret_jwt_sign_key_change_me_in_production"
+        default_factory=lambda: secrets.token_urlsafe(48) if os.getenv("ENV") != "dev" else "dev-only-insecure-jwt-key-do-not-use-in-prod",
+        description="Secret key for JWT signing. MUST be set via env var in production.",
     )
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # Cryptography
     SECRETS_ENCRYPTION_KEY: str = Field(
-        default="WjVnd1B4NzdWUWNJU2pIejh0Tk9jREp0UWxVbWpLczI="
+        default_factory=lambda: __import__("cryptography.fernet", fromlist=["Fernet"]).Fernet.generate_key().decode(),
+        description="AES-256 key for envelope encryption. Auto-generated if not set.",
     )
 
     # OpenTelemetry
@@ -54,6 +63,11 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
     OPENAI_API_BASE: str | None = None
     ANTHROPIC_API_KEY: str | None = None
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Parsed list of allowed CORS origins."""
+        return [origin.strip() for origin in self.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]
 
     @field_validator("DATABASE_URL")
     @classmethod
@@ -79,6 +93,23 @@ class Settings(BaseSettings):
                 UserWarning,
             )
         return v
+
+    def validate_production_secrets(self) -> list[str]:
+        """Returns a list of warnings for missing production secrets.
+        
+        Raises RuntimeError in prod if critical secrets are using insecure defaults.
+        """
+        warnings = []
+        if self.ENV == "prod":
+            if "dev-only" in self.JWT_SECRET_KEY:
+                msg = "JWT_SECRET_KEY is using an insecure dev default. Set a real secret via env var."
+                warnings.append(msg)
+                raise RuntimeError(f"SECURITY BLOCKER: {msg}")
+            if len(self.JWT_SECRET_KEY) < 32:
+                msg = "JWT_SECRET_KEY is too short (< 32 chars). Generate a strong key."
+                warnings.append(msg)
+                raise RuntimeError(f"SECURITY BLOCKER: {msg}")
+        return warnings
 
 
 # Global settings singleton

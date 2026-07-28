@@ -12,7 +12,7 @@ from src.adapters.database.repositories import (
 )
 from src.adapters.queue.redis_queue import RedisJobQueue, RedisEventBus
 from src.services.workflow_service import WorkflowService
-from src.config.settings import settings
+from src.api.deps import require_authenticated_user
 
 router = APIRouter(prefix="/workflows", tags=["Workflows"])
 
@@ -40,12 +40,11 @@ def get_workflow_service(
 @router.post("/", response_model=None, status_code=status.HTTP_201_CREATED)
 async def create_workflow(
     req: CreateWorkflowRequest,
+    user_id: UUID = Depends(require_authenticated_user),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> Any:
-    # Stub User UUID for local-first testing
-    mock_user_id = UUID("00000000-0000-0000-0000-000000000000")
     workflow = await service.create_workflow(
-        user_id=mock_user_id,
+        user_id=user_id,
         name=req.name,
         definition_dict=req.definition,
     )
@@ -61,6 +60,7 @@ async def create_workflow(
 async def run_workflow(
     workflow_id: UUID,
     request: Request,
+    user_id: UUID = Depends(require_authenticated_user),
     idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> Any:
@@ -82,6 +82,7 @@ async def approve_step(
     run_id: UUID,
     step_id: UUID,
     req: HumanApprovalRequest,
+    user_id: UUID = Depends(require_authenticated_user),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> Any:
     try:
@@ -100,11 +101,11 @@ async def list_workflows(
     limit: int = 20,
     cursor: str | None = None,
     sort: str = "name",
+    user_id: UUID = Depends(require_authenticated_user),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> Any:
     """Lists workflows with cursor-based pagination and configurable sorting fields."""
-    mock_user_id = UUID("00000000-0000-0000-0000-000000000000")
-    workflows = await service.workflow_repo.list_by_user(mock_user_id)
+    workflows = await service.workflow_repo.list_by_user(user_id)
     
     # Sort logically
     sorted_workflows = sorted(workflows, key=lambda w: getattr(w, sort, w.name))

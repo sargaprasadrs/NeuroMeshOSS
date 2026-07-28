@@ -4,6 +4,13 @@ from httpx import AsyncClient
 from unittest.mock import AsyncMock
 from src.core.entities.workflow import Workflow, WorkflowDefinition
 from src.core.entities.run import Run, RunStatus
+from src.services.auth_service import AuthService
+
+
+def _auth_headers() -> dict[str, str]:
+    """Generate valid auth headers for protected endpoints."""
+    token = AuthService.create_access_token(data={"sub": str(uuid4()), "role": "user"})
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.mark.asyncio
@@ -27,10 +34,19 @@ async def test_metrics_endpoint(async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_unauthenticated_workflow_returns_401(async_client: AsyncClient):
+    """Protected endpoints must reject requests without a valid token."""
+    payload = {
+        "name": "Test",
+        "definition": {"nodes": [], "edges": []},
+    }
+    response = await async_client.post("/api/v1/workflows/", json=payload)
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
 async def test_create_workflow(async_client: AsyncClient, mock_db_session: AsyncMock):
     # Setup mock return values for repositories inside route
-    # In workflows.py, SqlAlchemyWorkflowRepository.save is called.
-    # We can mock session methods to prevent errors.
     mock_db_session.execute = AsyncMock()
     
     payload = {
@@ -46,7 +62,11 @@ async def test_create_workflow(async_client: AsyncClient, mock_db_session: Async
         }
     }
     
-    response = await async_client.post("/api/v1/workflows/", json=payload)
+    response = await async_client.post(
+        "/api/v1/workflows/",
+        json=payload,
+        headers=_auth_headers(),
+    )
     assert response.status_code == 201
     res_data = response.json()
     assert res_data["name"] == "Test Market Analyzer Flow"
@@ -75,7 +95,10 @@ async def test_run_workflow(async_client: AsyncClient, mock_db_session: AsyncMoc
         mock_workflow_model if model_class == WorkflowModel else None
     ))
     
-    response = await async_client.post(f"/api/v1/workflows/{workflow_id}/run")
+    response = await async_client.post(
+        f"/api/v1/workflows/{workflow_id}/run",
+        headers=_auth_headers(),
+    )
     assert response.status_code == 200
     res_data = response.json()
     assert "run_id" in res_data

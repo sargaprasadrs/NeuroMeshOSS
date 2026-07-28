@@ -27,6 +27,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Handles startup and shutdown lifespans (e.g. pools and triggers)."""
     logger.info("Initializing NeuroMeshOSS Engine Lifespan...")
     
+    # Warn about insecure production secrets on startup
+    prod_warnings = settings.validate_production_secrets()
+    for warning in prod_warnings:
+        logger.warning(f"SECURITY: {warning}")
+    
     # Instantiate Redis queue and event bus singletons to reuse connection pools
     from src.adapters.queue.redis_queue import RedisJobQueue, RedisEventBus
     app.state.job_queue = RedisJobQueue(settings.REDIS_URL)
@@ -34,9 +39,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     
     # Validate database connection pool
     try:
+        from sqlalchemy import text
         from src.adapters.database.session import engine
         async with engine.connect() as conn:
-            await conn.execute(type("MockText", (), {"text": lambda x: "SELECT 1"})("SELECT 1"))
+            await conn.execute(text("SELECT 1"))
         logger.info("Database connection validated successfully.")
     except Exception as e:
         logger.error(f"Failed database connection pool initialization: {e}")
@@ -67,13 +73,15 @@ def create_app() -> FastAPI:
         debug=settings.ENV == "dev",
     )
 
-    # CORS configuration
+    # CORS configuration — use explicit allowed origins from environment
+    allowed_origins = settings.cors_origins_list
+    logger.info(f"CORS allowed origins: {allowed_origins}")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Correlation-ID"],
     )
 
     # Core logging and auth middleware pipeline

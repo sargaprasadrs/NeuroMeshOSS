@@ -19,11 +19,16 @@ export const setAuthToken = (token: string | null) => {
   }
 };
 
-// WebSocket run connection factory
-export const connectToRunWS = (runId: string, onMessage: (event: any) => void): WebSocket => {
+// WebSocket run connection factory (with optional auth token)
+export const connectToRunWS = (
+  runId: string,
+  onMessage: (event: any) => void,
+  token?: string | null
+): WebSocket => {
   const wsPrefix = API_BASE_URL.startsWith("https://") ? "wss://" : "ws://";
   const cleanHost = API_BASE_URL.replace("https://", "").replace("http://", "");
-  const wsUrl = `${wsPrefix}${cleanHost}/api/ws/runs/${runId}`;
+  const authParam = token ? `?token=${encodeURIComponent(token)}` : "";
+  const wsUrl = `${wsPrefix}${cleanHost}/api/ws/runs/${runId}${authParam}`;
 
   const socket = new WebSocket(wsUrl);
 

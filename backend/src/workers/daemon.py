@@ -2,24 +2,97 @@ import argparse
 import asyncio
 import logging
 from typing import Any, Dict
-from src.adapters.queue.redis_queue import RedisJobQueue
+from uuid import UUID
+
+from src.adapters.queue.redis_queue import RedisJobQueue, RedisEventBus
+from src.adapters.database.session import AsyncSessionLocal
+from src.adapters.database.repositories import SqlAlchemyWorkflowRepository, SqlAlchemyRunRepository
+from src.services.workflow_engine import WorkflowEngine
 from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
+# Reuse a single event bus instance across all jobs in this worker process
+_event_bus: RedisEventBus | None = None
+
+
+def _get_event_bus() -> RedisEventBus:
+    """Return the shared event bus singleton for this worker process."""
+    global _event_bus
+    if _event_bus is None:
+        _event_bus = RedisEventBus(settings.REDIS_URL)
+    return _event_bus
+
 
 async def handle_workflow_job(payload: Dict[str, Any]) -> bool:
-    """Orchestrates job state processing."""
+    """Process a workflow job from the Redis Stream queue.
+
+    Supports actions:
+    - START: Begin executing a workflow run from the start
+    - RESUME: Resume a paused run (e.g. after human approval)
+    """
     run_id = payload.get("run_id")
     workflow_id = payload.get("workflow_id")
-    action = payload.get("action")
+    action = payload.get("action", "START")
     correlation_id = payload.get("correlation_id", "N/A")
-    logger.info(f"[Correlation ID: {correlation_id}] Worker received execution job. Run: {run_id}, Workflow: {workflow_id}, Action: {action}")
-    
-    # Stub: simulated node execution steps
-    await asyncio.sleep(0.5)
-    logger.info(f"[Correlation ID: {correlation_id}] Execution step complete for Run {run_id}")
-    return True
+    step_id = payload.get("step_id")
+
+    log_prefix = f"[Correlation ID: {correlation_id}] [Run: {run_id}]"
+    logger.info(f"{log_prefix} Worker received job. Action={action}, Workflow={workflow_id}")
+
+    try:
+        async with AsyncSessionLocal() as session:
+            workflow_repo = SqlAlchemyWorkflowRepository(session)
+            run_repo = SqlAlchemyRunRepository(session)
+
+            # Load workflow and run from database
+            wf_id = UUID(workflow_id) if workflow_id else None
+            run_uuid = UUID(run_id) if run_id else None
+
+            if not wf_id or not run_uuid:
+                logger.error(f"{log_prefix} Invalid workflow_id or run_id.")
+                return False
+
+            workflow = await workflow_repo.get_by_id(wf_id)
+            run = await run_repo.get_by_id(run_uuid)
+
+            if not workflow:
+                logger.error(f"{log_prefix} Workflow {wf_id} not found.")
+                return False
+            if not run:
+                logger.error(f"{log_prefix} Run {run_uuid} not found.")
+                return False
+
+            # Use the shared event bus for real-time WebSocket publishing
+            event_bus = _get_event_bus()
+            engine = WorkflowEngine(run_repo=run_repo, event_bus=event_bus)
+
+            if action == "START":
+                logger.info(f"{log_prefix} Starting workflow execution...")
+                final_run = await engine.execute_run(run, workflow)
+
+            elif action == "RESUME":
+                logger.info(f"{log_prefix} Resuming from node {step_id}...")
+                final_run = await engine.execute_run(run, workflow, start_node_id=step_id)
+
+            else:
+                logger.warning(f"{log_prefix} Unknown action '{action}'. Skipping.")
+                return False
+
+            logger.info(f"{log_prefix} Execution complete. Final status: {final_run.status.value}")
+            return True
+
+    except Exception as e:
+        logger.error(f"{log_prefix} Workflow execution failed: {e}", exc_info=True)
+        return False
+
+
+async def shutdown_event_bus() -> None:
+    """Close the shared event bus on worker shutdown."""
+    global _event_bus
+    if _event_bus is not None:
+        await _event_bus.close()
+        _event_bus = None
 
 
 async def main() -> None:
@@ -70,6 +143,7 @@ async def main() -> None:
     finally:
         logger.info("Closing Worker Queue connection pool...")
         await job_queue.close()
+        await shutdown_event_bus()
         logger.info("Worker Queue connection pool closed.")
 
 
